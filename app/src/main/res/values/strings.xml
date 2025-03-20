@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">blurhash-android</string>
+    <string-array name="spinner_items">
+        <item>Choice 1</item>
+        <item>Choice 2</item>
+        <item>Choice 3</item>
+        <item>Choice 4</item>
+    </string-array>
+</resources>
