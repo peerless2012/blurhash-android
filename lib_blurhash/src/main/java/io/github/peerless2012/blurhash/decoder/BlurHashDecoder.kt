@@ -108,7 +108,7 @@ object BlurHashDecoder {
 
     private fun signedPow2(value: Float) = value.pow(2f).withSign(value)
 
-    private fun composeBitmap(
+    public fun composeBitmap(
         width: Int, height: Int,
         numCompX: Int, numCompY: Int,
         colors: Array<FloatArray>,

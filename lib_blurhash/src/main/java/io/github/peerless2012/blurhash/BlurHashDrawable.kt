@@ -20,7 +20,7 @@ class BlurHashDrawable : Drawable {
         blurHash = if (shader && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             ShaderBlurHash()
         } else {
-            BitmapBlurHash()
+            BitmapBlurHash(this)
         }
     }
 

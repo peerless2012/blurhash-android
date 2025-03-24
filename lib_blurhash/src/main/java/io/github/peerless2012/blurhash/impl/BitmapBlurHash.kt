@@ -4,47 +4,66 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Rect
+import android.graphics.drawable.Drawable
 import io.github.peerless2012.blurhash.decoder.BlurHashDecoder
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * Blur hash use bitmap.
  */
-class BitmapBlurHash : BlurHash {
+class BitmapBlurHash(private val drawable: Drawable) : BlurHash {
 
     private val paint = Paint().also {
         it.flags = Paint.ANTI_ALIAS_FLAG
     }
 
-    private var bounds: Rect? = null
+    private var drawableBounds: Rect? = null
 
-    private var hash: String? = null
+    private var blurBounds: Rect? = null
 
-    private var bitmap: Bitmap? = null
-
-    private fun updateBitmap() {
-        if (hash == null || bounds == null) {
-            bitmap = null
-            return
-        }
-        // We may not need the view size bitmap.
-        bitmap = BlurHashDecoder.decode(hash, bounds!!.width(), bounds!!.height())
-    }
+    private var blurBitmap: Bitmap? = null
 
     override fun setHash(hash: String?) {
-        this.hash = hash
-        updateBitmap()
+        if (hash.isNullOrEmpty()) {
+            blurBitmap = null
+            return
+        }
+        GlobalScope.launch(Dispatchers.Main) {
+            blurBitmap = decodeHash(hash)
+            blurBitmap?.let {
+                blurBounds = Rect(0, 0, it.width, it.height)
+            }
+            drawable.invalidateSelf()
+        }
+    }
+
+    private suspend fun decodeHash(hash: String): Bitmap? {
+        return withContext(Dispatchers.Default) {
+            val pair = BlurHashDecoder.parse(hash)
+            if (pair == null) {
+                return@withContext null
+            }
+            val size = pair.first
+            val colors = pair.second
+            val bitmap = BlurHashDecoder.composeBitmap(size.width * 32,
+                size.height * 32, size.width, size.height, colors, true)
+            bitmap.prepareToDraw()
+            return@withContext bitmap
+        }
     }
 
     override fun onBoundsChange(bounds: Rect) {
-        this.bounds = bounds
-        updateBitmap()
+        this.drawableBounds = bounds
     }
 
     override fun onDraw(canvas: Canvas) {
-        if (bitmap == null) {
+        if (blurBitmap == null) {
             return
         }
-        canvas.drawBitmap(bitmap!!, bounds!!, bounds!!, paint)
+        canvas.drawBitmap(blurBitmap!!, blurBounds, drawableBounds!!, paint)
     }
 
 }

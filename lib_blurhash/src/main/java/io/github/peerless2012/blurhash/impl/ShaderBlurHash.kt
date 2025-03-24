@@ -5,7 +5,6 @@ import android.graphics.Paint
 import android.graphics.Rect
 import android.graphics.RuntimeShader
 import android.os.Build
-import android.util.Size
 import androidx.annotation.RequiresApi
 import io.github.peerless2012.blurhash.decoder.BlurHashDecoder
 import org.intellij.lang.annotations.Language
@@ -15,6 +14,8 @@ import org.intellij.lang.annotations.Language
  */
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 class ShaderBlurHash : BlurHash {
+
+    private val BLUR_HASH_MAX_SIZE = 32
 
     @Language("AGSL")
     val blurHashAGSL: String = """
@@ -55,9 +56,7 @@ class ShaderBlurHash : BlurHash {
 
     private val shader = RuntimeShader(blurHashAGSL)
 
-    private var size: Size? = null
-
-    private var colors: FloatArray? = null
+    private var validateShader: Boolean = false
 
     constructor() {
         paint.shader = shader
@@ -66,25 +65,25 @@ class ShaderBlurHash : BlurHash {
     override fun setHash(hash: String?) {
         val pair = BlurHashDecoder.parse(hash)
         if (pair == null) {
-            size = null
-            colors = null
+            validateShader = false
             return
         }
-        size = pair.first
-        if (size!!.width * size!!.height > 32) {
-            size = null
+        val size = pair.first
+        if (size.width * size.height > BLUR_HASH_MAX_SIZE) {
+            validateShader = false
             return
         }
-        colors = FloatArray(32 * 4)
+        val colors = FloatArray(BLUR_HASH_MAX_SIZE * 4)
         var index = 0
         pair.second.forEach {
-            System.arraycopy(it, 0, colors!!, index, it.size)
+            System.arraycopy(it, 0, colors, index, it.size)
             index += it.size
-            colors!![index] = 0f
+            colors[index] = 0f
             index++
         }
-        shader.setFloatUniform("colors", colors!!)
-        shader.setFloatUniform("num", size!!.width.toFloat(), size!!.height.toFloat())
+        shader.setFloatUniform("colors", colors)
+        shader.setFloatUniform("num", size.width.toFloat(), size.height.toFloat())
+        validateShader = true
     }
 
     override fun onBoundsChange(bounds: Rect) {
@@ -93,7 +92,7 @@ class ShaderBlurHash : BlurHash {
     }
 
     override fun onDraw(canvas: Canvas) {
-        if (size == null || colors == null) return
+        if (!validateShader) return
         canvas.drawPaint(paint)
     }
 

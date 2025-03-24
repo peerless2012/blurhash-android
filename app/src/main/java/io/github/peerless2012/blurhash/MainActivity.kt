@@ -67,9 +67,8 @@ class MainActivity : AppCompatActivity () {
         originImage = findViewById(R.id.main_origin)
         hashText = findViewById(R.id.main_hash)
         blurImage = findViewById(R.id.main_blur)
-        drawable = BlurHashDrawable()
+        drawable = BlurHashDrawable(false)
         blurImage.setImageDrawable(drawable)
-        updateContent(0)
     }
 
     private fun updateContent(index: Int) {
