@@ -1,8 +1,7 @@
 # blurhash-android
 BlurHash for Android.
 
-# Capture
-## Screenshots
+## Capture
 | 01                            | 02                            | 03                            | 04                            |
 |-------------------------------|-------------------------------|-------------------------------|-------------------------------|
 | ![01](capture/capture_01.jpg) | ![01](capture/capture_02.jpg) | ![01](capture/capture_03.jpg) | ![01](capture/capture_04.jpg) |

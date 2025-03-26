@@ -21,7 +21,7 @@ class ShaderBlurHash : BlurHash {
     val blurHashAGSL: String = """
         uniform vec2 startPos;
         uniform vec2 iResolution;
-        uniform vec2 num;
+        uniform ivec2 num;
         uniform vec4 colors[32];
         float linearTosRGB(float value) {
             float v = max(0, min(1, value));
@@ -35,14 +35,13 @@ class ShaderBlurHash : BlurHash {
             vec2 uv = (fragCoord.xy - startPos.xy) / iResolution.xy;
             vec3 color = vec3(0.0);
             vec2 uvpi = uv * 3.14159265358979323846;
-            int size = int(num.x * num.y);
+            int size = num.x * num.y;
             for (int index = 0; index < 32; index++) {
                 if (index >= size) break;
                 vec3 sColor = colors[index].rgb;
-                float fIndex = float(index);
-                float row = floor(fIndex / num.x);
-                float col = floor(fIndex - (row * num.x));
-                vec2 loopPos = vec2(col, row);
+                int row = index / num.x;  // 直接整数除法
+                int col = index - row * num.x;  // 直接取模运算
+                vec2 loopPos = vec2(float(col), float(row));
                 vec2 basics = uvpi * loopPos;
                 color += sColor * cos(basics.x) * cos(basics.y);
             }
@@ -82,7 +81,7 @@ class ShaderBlurHash : BlurHash {
             index++
         }
         shader.setFloatUniform("colors", colors)
-        shader.setFloatUniform("num", size.width.toFloat(), size.height.toFloat())
+        shader.setIntUniform("num", size.width, size.height)
         validateShader = true
     }
 
